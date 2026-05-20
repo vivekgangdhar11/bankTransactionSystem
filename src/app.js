@@ -1,5 +1,8 @@
 const express=require('express');
+
 const authRouter=require('./routes/auth.routes');
+const accountRouter=require('./routes/account.routes');
+
 const cookieParser=require('cookie-parser');
 
 
@@ -13,5 +16,6 @@ app.get('/',(req,res)=>{
 });
 
 app.use('/api/auth',authRouter);
+app.use('/api/accounts',accountRouter);
 
 module.exports=app;
