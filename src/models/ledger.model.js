@@ -33,20 +33,31 @@ const ledgerSchema = new mongoose.Schema({
   timestamps:true
 })
 
-function preventLedgerModification() {
+function preventQueryModification() {
   throw new Error("Ledger entries cannot be modified or deleted");
 }
 
-ledgerSchema.pre("findOneAndUpdate", preventLedgerModification);
-ledgerSchema.pre("updateOne", preventLedgerModification);
-ledgerSchema.pre("deleteOne", preventLedgerModification);
-ledgerSchema.pre("deleteMany", preventLedgerModification);
-ledgerSchema.pre("remove", preventLedgerModification);
-ledgerSchema.pre("updateMany", preventLedgerModification);
-ledgerSchema.pre("save",preventLedgerModification);
-ledgerSchema.pre("findOneAndDelete", preventLedgerModification);
-ledgerSchema.pre("findOneAndRemove", preventLedgerModification);
-ledgerSchema.pre("findOneAndReplace", preventLedgerModification);
+// Prevent any query-based updates or deletes on ledger entries
+ledgerSchema.pre("findOneAndUpdate", preventQueryModification);
+ledgerSchema.pre("updateOne", preventQueryModification);
+ledgerSchema.pre("deleteOne", preventQueryModification);
+ledgerSchema.pre("deleteMany", preventQueryModification);
+ledgerSchema.pre("remove", preventQueryModification);
+ledgerSchema.pre("updateMany", preventQueryModification);
+ledgerSchema.pre("findOneAndDelete", preventQueryModification);
+ledgerSchema.pre("findOneAndRemove", preventQueryModification);
+ledgerSchema.pre("findOneAndReplace", preventQueryModification);
+
+// Allow creating new ledger entries (`save` when `isNew === true`) but block
+// attempts to save (modify) an existing document.
+ledgerSchema.pre('save', function (next) {
+  if (!this.isNew) {
+    const err = new Error('Ledger entries cannot be modified or deleted');
+    if (typeof next === 'function') return next(err);
+    throw err;
+  }
+  if (typeof next === 'function') return next();
+});
 
 const ledgerModel = mongoose.model('ledger', ledgerSchema);
 
